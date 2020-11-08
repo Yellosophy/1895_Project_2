@@ -1,0 +1,380 @@
+package sample;
+
+public class fakeArduinoCodeIt2{
+
+    //------------------------------------------------- VARIABLES -----------------------------------------------------------------
+
+    // Pins meant to be left empty
+     int LEAVEUNCONNECTED = 0; // Used for random number generation
+
+    // Input pins
+     int shock = 1;
+     int pot = 2;
+     int mic = 3;
+     int button = 4;
+
+    // Output pins
+     int speaker = 5;
+     int hexA = 6; // top bar
+     int hexB = 7; // top right bar
+     int hexC = 8; // bottom right bar
+     int hexD = 9; // bottom bar
+     int hexE = 10; // bottom left bar
+     int hexF = 11; // top left bar
+     int hexG = 12; // middle bar
+
+
+
+    //----------------------------------------------- MAIN FUNCTIONS -------------------------------------------------------------
+
+    void setup(){
+        assignPins();
+        // Turn on one pin in the hex display to indicate power
+        digitalWrite(hex7, HIGH);
+    }
+    void loop(){
+        if(digitalRead(button) == HIGH){
+            startGame();
+        }
+    }
+
+    //--------------------------------------------- AUXILIARY FUNCTIONS -----------------------------------------------------------
+
+    //******************************************************************************************************************
+    // Contains all of the pin assignments necessary; it is meant to de-clutter the setup                              *
+    //******************************************************************************************************************
+    void assignPins(){
+        // Assigning pins
+        pinMode(shock, INPUT);
+        pinMode(pot, INPUT);
+        pinMode(mic, INPUT);
+        pinMode(button, INPUT);
+
+        pinMode(speaker, OUTPUT);
+        pinMode(hex1, OUTPUT);
+        pinMode(hex2, OUTPUT);
+        pinMode(hex3, OUTPUT);
+        pinMode(hex4, OUTPUT);
+        pinMode(hex5, OUTPUT);
+        pinMode(hex6, OUTPUT);
+        pinMode(hex7, OUTPUT);
+    }
+    //******************************************************************************************************************
+    // Runs the game                                                                                                   *
+    //******************************************************************************************************************
+    void startGame(){
+        bool mistake = false, success = false, firstCommand = true;
+        int elapsedTimeMS = 0, timeWindow = 2000, points = 0, startRollAngle = 0, givenCommand = -1; //TODO: analogRead(pot)
+
+        while(!mistake){
+            // If the user just hit start, give them a second to get ready
+            if(firstCommand){
+                delay(1000);
+                firstCommand = false;
+            }
+
+            // Speaker gives random command to user
+            givenCommand = generateCommand();
+            shoutCommand(givenCommand);
+
+            // Prepping vars for user time window
+            elapsedTimeMS = 0;
+            startRollAngle = 0; //TODO: Modify for analog input -- startRollAngle = analogRead(pot);
+
+            // User must respond with correct command in time window
+            while(elapsedTimeMS != timeWindow){
+
+                // Check if user made an input.  If so, judge it
+                if(readUserInput(startRollAngle) != -1){
+                    if(readUserInput(startRollAngle) == givenCommand){
+                        points++;
+                        successNoise();
+                    }
+                    else{
+                        mistake = true;
+                        failNoise();
+                    }
+                    break;
+                }
+
+                // Time elapses when the user is not making input
+                delay(10);
+                elapsedTimeMS += 10;
+
+                // Determine if the user ran out of time for input
+                if(elapsedTimeMS == timeWindow){
+                    mistake = true;
+                }
+
+                // Determine if user succeeded
+                if(points == 99){
+                    mistake = true;
+                    success = true;
+                }
+            }
+            // Time window is reduced with every success
+            timeWindow -= 15;
+
+        }
+
+        // When the game ends, deliver the results
+        delay(1000);
+        endMessage(success, points);
+
+    }
+    //******************************************************************************************************************
+    // Generates a random command for the user to respond to in the game                                               *
+    //******************************************************************************************************************
+    int generateCommand(){
+        randomSeed(analogRead(0)); // Generates a fairly-random number GIVEN that pin 0 is unconnected
+        return random(3) + 1; // random(3) produces a random number from 0 to 2.  Adding one to the result produces {1,2,3}
+    }
+    //******************************************************************************************************************
+    // Notifies the user what command to do (Currently via LED -> anticipated to be through speaker)                   *
+    //******************************************************************************************************************
+    void shoutCommand(int paramCommandNumber){
+        //TODO: Figure out how to write different tones to the actual speaker
+        switch(paramCommandNumber){
+            case 1:
+                digitalWrite(speaker, HIGH);
+                delay(275);
+                digitalWrite(speaker, LOW);
+                break;
+            case 2:
+                digitalWrite(speaker, HIGH);
+                delay(275);
+                digitalWrite(speaker, LOW);
+                delay(50);
+                digitalWrite(speaker, HIGH);
+                delay(275);
+                digitalWrite(speaker, LOW);
+                break;
+            case 3:
+                digitalWrite(speaker, HIGH);
+                delay(275);
+                digitalWrite(speaker, LOW);
+                delay(50);
+                digitalWrite(speaker, HIGH);
+                delay(275);
+                digitalWrite(speaker, LOW);
+                delay(50);
+                digitalWrite(speaker, HIGH);
+                delay(275);
+                digitalWrite(speaker, LOW);
+                break;
+            default:
+                digitalWrite(speaker, LOW);
+                break;
+        }
+    }
+    //******************************************************************************************************************
+    // Reads what command the user chooses to respond with and outputs its cooresponding number                        *
+    //******************************************************************************************************************
+    int readUserInput(int paramStartRollAngle){
+        int toReturn = -1;
+
+        // Check inputs
+        if(digitalRead(pot) == HIGH)//TODO: supposed to use a function that uses startRollAngle as param: rollSensorTriggered(startRollAngle)
+        {
+            toReturn = pot;
+        }
+        if(digitalRead(shock) == HIGH){//TODO: supposed to use a function that compares analogRead to baseline (shock)
+            toReturn = shock;
+        }
+        if(digitalRead(mic) == HIGH){//TODO: supposed to use a function that compares analogRead to baseline (mic)
+            toReturn = mic;
+        }
+
+        return toReturn;
+    }
+    //******************************************************************************************************************
+    // Uses the LED and the hex display to indicate if the user won and/or their score                                 *
+    //******************************************************************************************************************
+    void endMessage(bool paramSuccess, int paramPoints){
+        if(paramSuccess){
+            //Display dash
+            digitalWrite(hexA, LOW);
+            digitalWrite(hexB, LOW);
+            digitalWrite(hexC, LOW);
+            digitalWrite(hexD, LOW);
+            digitalWrite(hexE, LOW);
+            digitalWrite(hexF, LOW);
+            digitalWrite(hexG, HIGH);
+            for(int i = 0; i < 15; i++){
+                digitalWrite(speaker, HIGH);
+                delay(100);
+                digitalWrite(speaker, LOW);
+                delay(100);
+            }
+        }
+        else{
+            displayPoints(paramPoints);
+        }
+    }
+    //******************************************************************************************************************
+    // Noise that plays every time a successful input is made                                                          *
+    //******************************************************************************************************************
+    void successNoise(){
+        for(int i = 0; i < 5; i++){
+            digitalWrite(speaker, HIGH);
+            delay(100);
+            digitalWrite(speaker, LOW);
+            delay(100);
+        }
+    }
+    //******************************************************************************************************************
+    // Noise that plays when an incorrect input is made
+    //******************************************************************************************************************
+    void failNoise(){
+        digitalWrite(speaker, HIGH);
+        delay(1000);
+        digitalWrite(speaker, LOW);
+    }
+
+    //--------------------------------------------- CURRENTLY UNUSED FUNCTIONS ----------------------------------------------------
+
+    //******************************************************************************************************************
+    // Determines if the potentiometer was used to send the command                                                    *
+    //******************************************************************************************************************
+    //TODO: Implement TODO in readUserInput
+    bool potTriggered(int paramStartRollAngle){
+        return false;
+    }
+    //******************************************************************************************************************
+    // Determines if the shock sensor was used to send the command                                                     *
+    //******************************************************************************************************************
+    //TODO: Implement TODO in readUserInput
+    bool shockTriggered(){
+        return false;
+    }
+    //******************************************************************************************************************
+    // Determines if the mic was used to send the command                                                              *
+    //******************************************************************************************************************
+    //TODO: Implement TODO in readUserInput
+    bool micTriggered(){
+        return false;
+    }
+    //******************************************************************************************************************
+    // Displays the score to the hex display at the end of a game                                                      *
+    //******************************************************************************************************************
+    void displayPoints(int paramPoints){
+
+        // Determine the ones and tens digit of the points
+        int tensDigit = paramPoints / 10;
+        int onesDigit = paramPoints % 10;
+
+        // Display the tens digit first:
+        writeDigit(tensDigit);
+        delay(1000);
+        writeDigit(onesDigit);
+
+    }
+    //******************************************************************************************************************
+    // Writes the pins depending on the single-digit integer in the parameter                                          *
+    //******************************************************************************************************************
+    void writeDigit(int paramDigit){
+        switch(paramDigit){
+            case 0:
+                digitalWrite(hexA, HIGH);
+                digitalWrite(hexB, HIGH);
+                digitalWrite(hexC, HIGH);
+                digitalWrite(hexD, HIGH);
+                digitalWrite(hexE, HIGH);
+                digitalWrite(hexF, HIGH);
+                digitalWrite(hexG, LOW);
+                break;
+            case 1:
+                digitalWrite(hexA, LOW);
+                digitalWrite(hexB, HIGH);
+                digitalWrite(hexC, HIGH);
+                digitalWrite(hexD, LOW);
+                digitalWrite(hexE, LOW);
+                digitalWrite(hexF, LOW);
+                digitalWrite(hexG, LOW);
+                break;
+            case 2:
+                digitalWrite(hexA, HIGH);
+                digitalWrite(hexB, HIGH);
+                digitalWrite(hexC, LOW);
+                digitalWrite(hexD, HIGH);
+                digitalWrite(hexE, HIGH);
+                digitalWrite(hexF, LOW);
+                digitalWrite(hexG, HIGH);
+                break;
+            case 3:
+                digitalWrite(hexA, HIGH);
+                digitalWrite(hexB, HIGH);
+                digitalWrite(hexC, HIGH);
+                digitalWrite(hexD, HIGH);
+                digitalWrite(hexE, LOW);
+                digitalWrite(hexF, LOW);
+                digitalWrite(hexG, HIGH);
+                break;
+            case 4:
+                digitalWrite(hexA, LOW);
+                digitalWrite(hexB, HIGH);
+                digitalWrite(hexC, HIGH);
+                digitalWrite(hexD, LOW);
+                digitalWrite(hexE, LOW);
+                digitalWrite(hexF, HIGH);
+                digitalWrite(hexG, HIGH);
+                break;
+            case 5:
+                digitalWrite(hexA, HIGH);
+                digitalWrite(hexB, LOW);
+                digitalWrite(hexC, HIGH);
+                digitalWrite(hexD, HIGH);
+                digitalWrite(hexE, LOW);
+                digitalWrite(hexF, HIGH);
+                digitalWrite(hexG, HIGH);
+                break;
+            case 6:
+                digitalWrite(hexA, HIGH);
+                digitalWrite(hexB, LOW);
+                digitalWrite(hexC, HIGH);
+                digitalWrite(hexD, HIGH);
+                digitalWrite(hexE, HIGH);
+                digitalWrite(hexF, HIGH);
+                digitalWrite(hexG, HIGH);
+                break;
+            case 7:
+                digitalWrite(hexA, HIGH);
+                digitalWrite(hexB, HIGH);
+                digitalWrite(hexC, HIGH);
+                digitalWrite(hexD, LOW);
+                digitalWrite(hexE, LOW);
+                digitalWrite(hexF, LOW);
+                digitalWrite(hexG, LOW);
+                break;
+            case 8:
+                digitalWrite(hexA, HIGH);
+                digitalWrite(hexB, HIGH);
+                digitalWrite(hexC, HIGH);
+                digitalWrite(hexD, HIGH);
+                digitalWrite(hexE, HIGH);
+                digitalWrite(hexF, HIGH);
+                digitalWrite(hexG, HIGH);
+                break;
+            case 9:
+                digitalWrite(hexA, HIGH);
+                digitalWrite(hexB, HIGH);
+                digitalWrite(hexC, HIGH);
+                digitalWrite(hexD, LOW);
+                digitalWrite(hexE, LOW);
+                digitalWrite(hexF, HIGH);
+                digitalWrite(hexG, HIGH);
+                break;
+        }
+    }
+}
+
+    //--------------------------------------------- NOTES FOR THE CODE ABOVE ----------------------------------------------------
+
+    // Enum abstraction explanation:
+    /* The input pin number and the command name are interchangeable. That is, when a number is referenced
+     *  in this code, the command it represents should be kept in mind.*/
+
+    // Additional notes:
+    /* For the sake of testing, all read commands are digital.  Notes are left where analogRead would be needed*/
+    /* The "TODO:" keyword can be used to look for places where change would need to be made for the next iterations*/
+
