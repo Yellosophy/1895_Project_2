@@ -1,0 +1,5 @@
+DRC Rules Export File for PCB: C:\Users\dsfau\Documents\PITT\Fall 2020\1895 Jr Design\github\1895_Project_2\Altium\Main11_8.PcbDoc
+RuleKind=ShortCircuit|RuleName=ShortCircuit|Scope=Board|Allowed=0
+RuleKind=SolderMaskExpansion|RuleName=SolderMaskExpansion_1|Scope=Board|Minimum=4.00
+RuleKind=Width|RuleName=Width|Scope=Board|Minimum=7.00
+RuleKind=Clearance|RuleName=Clearance|Scope=Board|Minimum=7.00

@@ -1,0 +1,26 @@
+Output: Gerber Files
+Type  : Gerber
+From  : Variant [[No Variations]] of Project [Project_2_BopIt.PrjPcb]
+   Generated File[Main11_8.GTO]
+   Generated File[Main11_8.GTP]
+   Generated File[Main11_8.GTS]
+   Generated File[Main11_8.GTL]
+   Generated File[Main11_8.GBL]
+   Generated File[Main11_8.GBS]
+   Generated File[Main11_8.GBP]
+   Generated File[Main11_8.GBO]
+   Generated File[Main11_8.GM1]
+   Generated File[Main11_8.GM13]
+   Generated File[Main11_8.GM15]
+   Generated File[Main11_8.GKO]
+   Generated File[Main11_8.GPT]
+   Generated File[Main11_8.GPB]
+   Generated File[Main11_8.RUL]
+   Generated File[Main11_8.EXTREP]
+   Generated File[Main11_8.REP]
+
+
+Files Generated   : 17
+Documents Printed : 0
+
+Finished Output Generation At 2:50:15 PM On 11/9/2020
